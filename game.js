@@ -1,9 +1,11 @@
 // Game Variables
 let clickCounter = 0;
+let clickMultiplier = 1;
 let tabTitleCost = 10;
 let tabTitleBought = false;
 let autoClickerCost = 50;
 let autoClickerBought = false;
+let autoClickerInterval = null;
 let maxClicks = 1000;
 
 // DOM Elements
@@ -19,15 +21,23 @@ const closeModal = document.getElementById("closeModal");
 const shopItemsContainer = document.getElementById("shopItems");
 
 // 50 Unique Items for the Shop
-const items = Array.from({ length: 50 }, (_, index) => ({
-    id: index + 1,
-    name: `Item ${index + 1}`,
-    cost: (index + 1) * 20, // Cost increases with each item
-    unlocked: false,
-    effect: () => {
-        console.log(`Effect of Item ${index + 1} applied!`);
-    },
-}));
+const items = [
+    { name: "Click Booster", cost: 20, effect: () => (clickMultiplier += 1) },
+    { name: "Double Clicks", cost: 40, effect: () => (clickMultiplier *= 2) },
+    { name: "Super Clicker", cost: 100, effect: () => (clickMultiplier += 5) },
+    { name: "Auto Click Speed", cost: 150, effect: () => increaseAutoClickSpeed(500) },
+    { name: "Golden Clicks", cost: 200, effect: () => (clickMultiplier += 10) },
+    { name: "Click Storm", cost: 300, effect: () => stormClicks(10) },
+    { name: "Half Upgrade Costs", cost: 400, effect: halveUpgradeCosts },
+    { name: "Background Theme", cost: 50, effect: () => changeBackgroundTheme() },
+    { name: "Confetti Clicks", cost: 600, effect: () => console.log("Confetti!") },
+    { name: "Lucky Charm", cost: 500, effect: () => (clickMultiplier += 3) },
+    ...Array.from({ length: 40 }, (_, i) => ({
+        name: `Mystic Item ${i + 11}`,
+        cost: (i + 11) * 100,
+        effect: () => console.log(`Mystic Item ${i + 11} effect activated!`),
+    })),
+];
 
 // Event Listeners
 clickButton.addEventListener("click", handleClick);
@@ -38,7 +48,7 @@ closeModal.addEventListener("click", closeShopModal);
 
 // Functions
 function handleClick() {
-    clickCounter++;
+    clickCounter += clickMultiplier;
     updateUI();
 }
 
@@ -48,7 +58,7 @@ function handleTabTitleUpgrade() {
         tabTitleBought = true;
         updateUI();
 
-        // Temporary "Well Done!" Tab Title
+        // Change tab name to "Well Done!" for 10 seconds
         document.title = "Well Done!";
         setTimeout(() => {
             const newTitle = prompt("Enter a new tab name:");
@@ -62,8 +72,25 @@ function handleAutoClickerUpgrade() {
         clickCounter -= autoClickerCost;
         autoClickerBought = true;
         updateUI();
-        activateAutoClicker();
+        startAutoClicker();
     }
+}
+
+function startAutoClicker() {
+    if (autoClickerInterval) return;
+    autoClickerInterval = setInterval(() => {
+        clickCounter += clickMultiplier;
+        updateUI();
+    }, 1000);
+}
+
+function increaseAutoClickSpeed(newSpeed) {
+    if (!autoClickerBought) return;
+    clearInterval(autoClickerInterval);
+    autoClickerInterval = setInterval(() => {
+        clickCounter += clickMultiplier;
+        updateUI();
+    }, newSpeed);
 }
 
 function openShopModal() {
@@ -75,53 +102,53 @@ function closeShopModal() {
     shopModal.style.display = "none";
 }
 
-// Update UI Elements
-function updateUI() {
-    clickCounterElement.textContent = clickCounter;
-    updateProgressBar();
+function populateShopItems() {
+    shopItemsContainer.innerHTML = "";
+    items.forEach((item, index) => {
+        const itemButton = document.createElement("button");
+        itemButton.textContent = `${item.name} - ${item.cost} Clicks`;
+        itemButton.className = "shop-item";
+        itemButton.disabled = clickCounter < item.cost;
+        itemButton.onclick = () => unlockItem(item, index);
+        shopItemsContainer.appendChild(itemButton);
+    });
+}
 
-    // Enable or disable upgrades
-    if (clickCounter >= tabTitleCost && !tabTitleBought) {
-        buyTabTitleButton.disabled = false;
-    }
-    if (clickCounter >= autoClickerCost && !autoClickerBought) {
-        buyAutoClickerButton.disabled = false;
+function unlockItem(item, index) {
+    if (clickCounter >= item.cost) {
+        clickCounter -= item.cost;
+        item.effect();
+        items.splice(index, 1); // Remove item from shop
+        updateUI();
+        alert(`${item.name} unlocked!`);
     }
 }
 
-// Progress Bar
+function halveUpgradeCosts() {
+    tabTitleCost = Math.ceil(tabTitleCost / 2);
+    autoClickerCost = Math.ceil(autoClickerCost / 2);
+}
+
+function changeBackgroundTheme() {
+    document.body.style.background = "linear-gradient(135deg, #89ff7e, #00b4ff)";
+}
+
+function stormClicks(amount) {
+    clickCounter += amount * clickMultiplier;
+    updateUI();
+}
+
+function updateUI() {
+    clickCounterElement.textContent = clickCounter;
+    updateProgressBar();
+    buyTabTitleButton.disabled = clickCounter < tabTitleCost || tabTitleBought;
+    buyAutoClickerButton.disabled = clickCounter < autoClickerCost || autoClickerBought;
+    populateShopItems();
+}
+
 function updateProgressBar() {
     const progress = Math.min((clickCounter / maxClicks) * 100, 100);
     progressBar.style.width = `${progress}%`;
     progressPercentage.textContent = `${Math.round(progress)}%`;
 }
 
-// Activate Auto Clicker
-function activateAutoClicker() {
-    setInterval(() => {
-        clickCounter++;
-        updateUI();
-    }, 1000); // Adds 1 click per second
-}
-
-// Populate Shop Items
-function populateShopItems() {
-    shopItemsContainer.innerHTML = ""; // Clear the shop
-    items.forEach((item) => {
-        const itemButton = document.createElement("button");
-        itemButton.textContent = `${item.name} - ${item.cost} Clicks`;
-        itemButton.className = "shop-item";
-        itemButton.disabled = item.unlocked || clickCounter < item.cost;
-        itemButton.onclick = () => unlockItem(item);
-        shopItemsContainer.appendChild(itemButton);
-    });
-}
-
-// Unlock Item
-function unlockItem(item) {
-    if (clickCounter >= item.cost) {
-        clickCounter -= item.cost;
-        item.unlocked = true;
-        item.effect(); // Apply the item's unique effect
-        updateUI();
-  
