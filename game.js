@@ -18,13 +18,15 @@ const shopModal = document.getElementById("shopModal");
 const closeModal = document.getElementById("closeModal");
 const shopItemsContainer = document.getElementById("shopItems");
 
-// Create 50 Shop Items
-const totalItems = 50;
-const items = Array.from({ length: totalItems }, (_, index) => ({
+// 50 Unique Items for the Shop
+const items = Array.from({ length: 50 }, (_, index) => ({
     id: index + 1,
-    cost: (index + 1) * 10, // Cost increases with each item
+    name: `Item ${index + 1}`,
+    cost: (index + 1) * 20, // Cost increases with each item
     unlocked: false,
-    name: `Item ${index + 1}`
+    effect: () => {
+        console.log(`Effect of Item ${index + 1} applied!`);
+    },
 }));
 
 // Event Listeners
@@ -41,16 +43,22 @@ function handleClick() {
 }
 
 function handleTabTitleUpgrade() {
-    if (clickCounter >= tabTitleCost) {
+    if (clickCounter >= tabTitleCost && !tabTitleBought) {
         clickCounter -= tabTitleCost;
         tabTitleBought = true;
         updateUI();
-        changeTabTitle();
+
+        // Temporary "Well Done!" Tab Title
+        document.title = "Well Done!";
+        setTimeout(() => {
+            const newTitle = prompt("Enter a new tab name:");
+            if (newTitle) document.title = newTitle;
+        }, 10000);
     }
 }
 
 function handleAutoClickerUpgrade() {
-    if (clickCounter >= autoClickerCost) {
+    if (clickCounter >= autoClickerCost && !autoClickerBought) {
         clickCounter -= autoClickerCost;
         autoClickerBought = true;
         updateUI();
@@ -71,33 +79,35 @@ function closeShopModal() {
 function updateUI() {
     clickCounterElement.textContent = clickCounter;
     updateProgressBar();
-    populateShopItems();
+
+    // Enable or disable upgrades
+    if (clickCounter >= tabTitleCost && !tabTitleBought) {
+        buyTabTitleButton.disabled = false;
+    }
+    if (clickCounter >= autoClickerCost && !autoClickerBought) {
+        buyAutoClickerButton.disabled = false;
+    }
 }
 
-// Update Progress Bar
+// Progress Bar
 function updateProgressBar() {
-    const progress = (clickCounter / maxClicks) * 100;
+    const progress = Math.min((clickCounter / maxClicks) * 100, 100);
     progressBar.style.width = `${progress}%`;
     progressPercentage.textContent = `${Math.round(progress)}%`;
 }
 
-// Tab Title Upgrade Effect
-function changeTabTitle() {
-    document.title = "You've unlocked the Tab Title!";
-}
-
-// Auto Clicker Effect
+// Activate Auto Clicker
 function activateAutoClicker() {
     setInterval(() => {
         clickCounter++;
         updateUI();
-    }, 1000);
+    }, 1000); // Adds 1 click per second
 }
 
 // Populate Shop Items
 function populateShopItems() {
-    shopItemsContainer.innerHTML = "";
-    items.forEach(item => {
+    shopItemsContainer.innerHTML = ""; // Clear the shop
+    items.forEach((item) => {
         const itemButton = document.createElement("button");
         itemButton.textContent = `${item.name} - ${item.cost} Clicks`;
         itemButton.className = "shop-item";
@@ -112,8 +122,6 @@ function unlockItem(item) {
     if (clickCounter >= item.cost) {
         clickCounter -= item.cost;
         item.unlocked = true;
+        item.effect(); // Apply the item's unique effect
         updateUI();
-        alert(`You unlocked ${item.name}!`);
-    }
-}
-
+  
