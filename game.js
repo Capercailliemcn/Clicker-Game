@@ -41,31 +41,11 @@ redeemCodeButton.addEventListener("click", () => {
     const code = redeemCodeInput.value.trim().toLowerCase();
     const now = new Date();
 
+    // Hidden code management for internal use
     if (code === "brodie") {
         codeManagerActive = true;
         redeemMessage.textContent = "Code Management Mode activated. Add new codes!";
         redeemMessage.classList.remove("error");
-        redeemCodeInput.value = "";
-        return;
-    }
-
-    if (codeManagerActive) {
-        const newCode = prompt("Enter the new promo code:");
-        const reward = parseInt(prompt("Enter the reward (number of clicks):"), 10);
-        const expiration = prompt("Enter the expiration date (YYYY-MM-DD):");
-
-        if (newCode && reward && expiration && !isNaN(reward)) {
-            promoCodes[newCode.toLowerCase()] = {
-                reward: reward,
-                expires: new Date(expiration),
-            };
-            redeemMessage.textContent = `New code "${newCode}" added!`;
-            redeemMessage.classList.remove("error");
-            codeManagerActive = false;
-        } else {
-            redeemMessage.textContent = "Failed to add code. Please provide valid inputs.";
-            redeemMessage.classList.add("error");
-        }
         redeemCodeInput.value = "";
         return;
     }
