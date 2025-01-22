@@ -1,4 +1,3 @@
-// Game Variables
 let clickCounter = 0;
 let clickMultiplier = 1;
 let tabTitleCost = 10;
@@ -19,23 +18,18 @@ const shopButton = document.getElementById("shopButton");
 const shopModal = document.getElementById("shopModal");
 const closeModal = document.getElementById("closeModal");
 const shopItemsContainer = document.getElementById("shopItems");
+const clickEffectsContainer = document.getElementById("clickEffectsContainer");
 
-// 50 Unique Items for the Shop
+// 50 Unique Shop Items
 const items = [
     { name: "Click Booster", cost: 20, effect: () => (clickMultiplier += 1) },
     { name: "Double Clicks", cost: 40, effect: () => (clickMultiplier *= 2) },
-    { name: "Super Clicker", cost: 100, effect: () => (clickMultiplier += 5) },
-    { name: "Auto Click Speed", cost: 150, effect: () => increaseAutoClickSpeed(500) },
-    { name: "Golden Clicks", cost: 200, effect: () => (clickMultiplier += 10) },
-    { name: "Click Storm", cost: 300, effect: () => stormClicks(10) },
-    { name: "Half Upgrade Costs", cost: 400, effect: halveUpgradeCosts },
-    { name: "Background Theme", cost: 50, effect: () => changeBackgroundTheme() },
-    { name: "Confetti Clicks", cost: 600, effect: () => console.log("Confetti!") },
-    { name: "Lucky Charm", cost: 500, effect: () => (clickMultiplier += 3) },
-    ...Array.from({ length: 40 }, (_, i) => ({
-        name: `Mystic Item ${i + 11}`,
-        cost: (i + 11) * 100,
-        effect: () => console.log(`Mystic Item ${i + 11} effect activated!`),
+    { name: "Golden Clicks", cost: 100, effect: () => (clickMultiplier += 5) },
+    { name: "Auto Click Boost", cost: 150, effect: () => increaseAutoClickSpeed(500) },
+    ...Array.from({ length: 46 }, (_, i) => ({
+        name: `Mystic Item ${i + 5}`,
+        cost: (i + 5) * 50,
+        effect: () => console.log(`Mystic Item ${i + 5} effect activated!`),
     })),
 ];
 
@@ -49,6 +43,7 @@ closeModal.addEventListener("click", closeShopModal);
 // Functions
 function handleClick() {
     clickCounter += clickMultiplier;
+    showClickEffect(clickMultiplier);
     updateUI();
 }
 
@@ -57,8 +52,6 @@ function handleTabTitleUpgrade() {
         clickCounter -= tabTitleCost;
         tabTitleBought = true;
         updateUI();
-
-        // Change tab name to "Well Done!" for 10 seconds
         document.title = "Well Done!";
         setTimeout(() => {
             const newTitle = prompt("Enter a new tab name:");
@@ -71,13 +64,22 @@ function handleAutoClickerUpgrade() {
     if (clickCounter >= autoClickerCost && !autoClickerBought) {
         clickCounter -= autoClickerCost;
         autoClickerBought = true;
-        updateUI();
         startAutoClicker();
+        updateUI();
     }
 }
 
+function showClickEffect(clicks) {
+    const effect = document.createElement("span");
+    effect.className = "click-effect";
+    effect.textContent = `+${clicks}`;
+    const randomX = Math.random() * 40 - 20;
+    effect.style.left = `${50 + randomX}%`;
+    clickEffectsContainer.appendChild(effect);
+    setTimeout(() => effect.remove(), 1000);
+}
+
 function startAutoClicker() {
-    if (autoClickerInterval) return;
     autoClickerInterval = setInterval(() => {
         clickCounter += clickMultiplier;
         updateUI();
@@ -85,8 +87,7 @@ function startAutoClicker() {
 }
 
 function increaseAutoClickSpeed(newSpeed) {
-    if (!autoClickerBought) return;
-    clearInterval(autoClickerInterval);
+    if (autoClickerInterval) clearInterval(autoClickerInterval);
     autoClickerInterval = setInterval(() => {
         clickCounter += clickMultiplier;
         updateUI();
@@ -105,12 +106,12 @@ function closeShopModal() {
 function populateShopItems() {
     shopItemsContainer.innerHTML = "";
     items.forEach((item, index) => {
-        const itemButton = document.createElement("button");
-        itemButton.textContent = `${item.name} - ${item.cost} Clicks`;
-        itemButton.className = "shop-item";
-        itemButton.disabled = clickCounter < item.cost;
-        itemButton.onclick = () => unlockItem(item, index);
-        shopItemsContainer.appendChild(itemButton);
+        const button = document.createElement("button");
+        button.className = "shop-item";
+        button.textContent = `${item.name} - ${item.cost} Clicks`;
+        button.disabled = clickCounter < item.cost;
+        button.onclick = () => unlockItem(item, index);
+        shopItemsContainer.appendChild(button);
     });
 }
 
@@ -118,31 +119,17 @@ function unlockItem(item, index) {
     if (clickCounter >= item.cost) {
         clickCounter -= item.cost;
         item.effect();
-        items.splice(index, 1); // Remove item from shop
+        items.splice(index, 1);
         updateUI();
         alert(`${item.name} unlocked!`);
     }
 }
 
-function halveUpgradeCosts() {
-    tabTitleCost = Math.ceil(tabTitleCost / 2);
-    autoClickerCost = Math.ceil(autoClickerCost / 2);
-}
-
-function changeBackgroundTheme() {
-    document.body.style.background = "linear-gradient(135deg, #89ff7e, #00b4ff)";
-}
-
-function stormClicks(amount) {
-    clickCounter += amount * clickMultiplier;
-    updateUI();
-}
-
 function updateUI() {
     clickCounterElement.textContent = clickCounter;
-    updateProgressBar();
     buyTabTitleButton.disabled = clickCounter < tabTitleCost || tabTitleBought;
     buyAutoClickerButton.disabled = clickCounter < autoClickerCost || autoClickerBought;
+    updateProgressBar();
     populateShopItems();
 }
 
@@ -151,4 +138,3 @@ function updateProgressBar() {
     progressBar.style.width = `${progress}%`;
     progressPercentage.textContent = `${Math.round(progress)}%`;
 }
-
