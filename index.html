@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clicker Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <h1>Clicker Game</h1>
+        <div class="click-info">
+            <button id="clickButton" class="action-button">Click Me!</button>
+            <p class="counter-text">Clicks: <span id="clickCounter">0</span></p>
+        </div>
+
+        <div class="upgrades">
+            <h2>Upgrades</h2>
+            <div class="upgrade-container">
+                <button id="buyTabTitle" class="upgrade-button" disabled>Buy Tab Title</button>
+                <p class="upgrade-description">Cost: <span id="tabTitleCost">10</span> clicks</p>
+            </div>
+
+            <div class="upgrade-container">
+                <button id="buyAutoClicker" class="upgrade-button" disabled>Buy Auto Clicker (50 clicks)</button>
+                <p class="upgrade-description">Adds 1 click per second</p>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <p>Progress: <span id="progressPercentage">0%</span></p>
+            <div class="bar-background">
+                <div id="progressBar" class="progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
