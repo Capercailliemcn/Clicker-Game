@@ -42,6 +42,7 @@
 
         <section class="shop-section">
             <button id="shopButton" class="shop-button">Item Shop</button>
+            <button id="settingsButton" class="shop-button">Settings</button>
         </section>
 
         <!-- Modal for Item Shop -->
@@ -52,6 +53,39 @@
                 <div class="shop-items" id="shopItems"></div>
             </div>
         </div>
+
+        <!-- Modal for Settings -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <span id="closeSettings" class="close">&times;</span>
+                <h3>Settings</h3>
+                <div class="settings-section">
+                    <h4>Music Controls</h4>
+                    <button id="toggleMusic" class="music-button">Play Lofi Music</button>
+                </div>
+                <div class="settings-section">
+                    <h4>Redeem Code</h4>
+                    <input type="text" id="redeemCodeInput" placeholder="Enter a code or type 'brodie' to manage codes" />
+                    <button id="redeemCodeButton" class="music-button">Redeem</button>
+                    <p id="redeemMessage" class="redeem-message"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lofi Music -->
+        <audio id="lofiMusic" loop>
+            <source src="https://lofi-music-link.example.com/track.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+
+        <!-- Level Info -->
+        <section class="level-info">
+            <h2>Level: <span id="levelCounter">1</span></h2>
+            <p id="levelRewardMessage">Reach level 2 for your first reward!</p>
+        </section>
+
+        <!-- Confetti Effect -->
+        <div id="confettiContainer" class="confetti-container"></div>
     </div>
 
     <script src="game.js"></script>
