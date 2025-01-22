@@ -1,11 +1,13 @@
+// Game Variables
 let clickCounter = 0;
 let clickMultiplier = 1;
-let tabTitleCost = 10;
-let tabTitleBought = false;
+let level = 1;
+let levelUpThreshold = 100;
+let levelReward = 50;
 let autoClickerCost = 50;
 let autoClickerBought = false;
 let autoClickerInterval = null;
-let maxClicks = 1000;
+let codeManagerActive = false; // Tracks if Code Management Mode is active
 
 // DOM Elements
 const clickButton = document.getElementById("clickButton");
@@ -15,70 +17,117 @@ const buyAutoClickerButton = document.getElementById("buyAutoClicker");
 const progressBar = document.getElementById("progressBar");
 const progressPercentage = document.getElementById("progressPercentage");
 const shopButton = document.getElementById("shopButton");
+const settingsButton = document.getElementById("settingsButton");
 const shopModal = document.getElementById("shopModal");
+const settingsModal = document.getElementById("settingsModal");
 const closeModal = document.getElementById("closeModal");
-const shopItemsContainer = document.getElementById("shopItems");
-const clickEffectsContainer = document.getElementById("clickEffectsContainer");
+const closeSettings = document.getElementById("closeSettings");
+const toggleMusicButton = document.getElementById("toggleMusic");
+const lofiMusic = document.getElementById("lofiMusic");
+const redeemCodeInput = document.getElementById("redeemCodeInput");
+const redeemCodeButton = document.getElementById("redeemCodeButton");
+const redeemMessage = document.getElementById("redeemMessage");
+const levelCounterElement = document.getElementById("levelCounter");
+const levelRewardMessage = document.getElementById("levelRewardMessage");
+const confettiContainer = document.getElementById("confettiContainer");
 
-// 50 Unique Shop Items
-const items = [
-    { name: "Click Booster", cost: 20, effect: () => (clickMultiplier += 1) },
-    { name: "Double Clicks", cost: 40, effect: () => (clickMultiplier *= 2) },
-    { name: "Golden Clicks", cost: 100, effect: () => (clickMultiplier += 5) },
-    { name: "Auto Click Boost", cost: 150, effect: () => increaseAutoClickSpeed(500) },
-    ...Array.from({ length: 46 }, (_, i) => ({
-        name: `Mystic Item ${i + 5}`,
-        cost: (i + 5) * 50,
-        effect: () => console.log(`Mystic Item ${i + 5} effect activated!`),
-    })),
-];
+// Promo Codes Storage
+const promoCodes = {
+    clickboost: { reward: 50, expires: new Date('2025-02-28') },
+};
 
-// Event Listeners
-clickButton.addEventListener("click", handleClick);
-buyTabTitleButton.addEventListener("click", handleTabTitleUpgrade);
-buyAutoClickerButton.addEventListener("click", handleAutoClickerUpgrade);
-shopButton.addEventListener("click", openShopModal);
-closeModal.addEventListener("click", closeShopModal);
+// Redeem Codes Logic
+redeemCodeButton.addEventListener("click", () => {
+    const code = redeemCodeInput.value.trim().toLowerCase();
+    const now = new Date();
 
-// Functions
-function handleClick() {
-    clickCounter += clickMultiplier;
-    showClickEffect(clickMultiplier);
-    updateUI();
-}
+    if (code === "brodie") {
+        codeManagerActive = true;
+        redeemMessage.textContent = "Code Management Mode activated. Add new codes!";
+        redeemMessage.classList.remove("error");
+        redeemCodeInput.value = "";
+        return;
+    }
 
-function handleTabTitleUpgrade() {
-    if (clickCounter >= tabTitleCost && !tabTitleBought) {
-        clickCounter -= tabTitleCost;
-        tabTitleBought = true;
+    if (codeManagerActive) {
+        const newCode = prompt("Enter the new promo code:");
+        const reward = parseInt(prompt("Enter the reward (number of clicks):"), 10);
+        const expiration = prompt("Enter the expiration date (YYYY-MM-DD):");
+
+        if (newCode && reward && expiration && !isNaN(reward)) {
+            promoCodes[newCode.toLowerCase()] = {
+                reward: reward,
+                expires: new Date(expiration),
+            };
+            redeemMessage.textContent = `New code "${newCode}" added!`;
+            redeemMessage.classList.remove("error");
+            codeManagerActive = false;
+        } else {
+            redeemMessage.textContent = "Failed to add code. Please provide valid inputs.";
+            redeemMessage.classList.add("error");
+        }
+        redeemCodeInput.value = "";
+        return;
+    }
+
+    const promo = promoCodes[code];
+    if (promo && promo.expires > now) {
+        clickCounter += promo.reward;
         updateUI();
-        document.title = "Well Done!";
-        setTimeout(() => {
-            const newTitle = prompt("Enter a new tab name:");
-            if (newTitle) document.title = newTitle;
-        }, 10000);
+        redeemMessage.textContent = `Code accepted! You earned ${promo.reward} clicks!`;
+        redeemMessage.classList.remove("error");
+        redeemCodeInput.value = "";
+    } else if (promo && promo.expires <= now) {
+        redeemMessage.textContent = "This code has expired.";
+        redeemMessage.classList.add("error");
+    } else {
+        redeemMessage.textContent = "Invalid code.";
+        redeemMessage.classList.add("error");
+    }
+});
+
+// Level-Up Logic
+function checkLevelUp() {
+    if (clickCounter >= level * levelUpThreshold) {
+        level++;
+        levelCounterElement.textContent = level;
+        levelRewardMessage.textContent = `Level ${level} reached! Reward: ${levelReward} clicks!`;
+
+        // Award the player and trigger the confetti effect
+        clickCounter += levelReward;
+        triggerConfetti();
+        updateUI();
     }
 }
 
-function handleAutoClickerUpgrade() {
-    if (clickCounter >= autoClickerCost && !autoClickerBought) {
-        clickCounter -= autoClickerCost;
-        autoClickerBought = true;
-        startAutoClicker();
-        updateUI();
+// Confetti Effect
+function triggerConfetti() {
+    confettiContainer.innerHTML = ""; // Clear previous confetti
+    for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement("div");
+        confetti.className = "confetti";
+        confetti.style.left = `${Math.random() * 100}%`;
+        confetti.style.animationDuration = `${Math.random() * 2 + 1}s`;
+        confettiContainer.appendChild(confetti);
     }
+
+    // Hide confetti after 10 seconds
+    setTimeout(() => {
+        confettiContainer.innerHTML = "";
+    }, 10000);
 }
 
-function showClickEffect(clicks) {
-    const effect = document.createElement("span");
-    effect.className = "click-effect";
-    effect.textContent = `+${clicks}`;
-    const randomX = Math.random() * 40 - 20;
-    effect.style.left = `${50 + randomX}%`;
-    clickEffectsContainer.appendChild(effect);
-    setTimeout(() => effect.remove(), 1000);
+// Update UI
+function updateUI() {
+    clickCounterElement.textContent = clickCounter;
+    progressBar.style.width = `${(clickCounter / 1000) * 100}%`;
+    progressPercentage.textContent = `${Math.min((clickCounter / 1000) * 100, 100)}%`;
+
+    // Check for level-up
+    checkLevelUp();
 }
 
+// Game Logic for Auto Clicker and Upgrades
 function startAutoClicker() {
     autoClickerInterval = setInterval(() => {
         clickCounter += clickMultiplier;
@@ -86,55 +135,27 @@ function startAutoClicker() {
     }, 1000);
 }
 
-function increaseAutoClickSpeed(newSpeed) {
-    if (autoClickerInterval) clearInterval(autoClickerInterval);
-    autoClickerInterval = setInterval(() => {
-        clickCounter += clickMultiplier;
-        updateUI();
-    }, newSpeed);
-}
-
-function openShopModal() {
-    shopModal.style.display = "block";
-    populateShopItems();
-}
-
-function closeShopModal() {
-    shopModal.style.display = "none";
-}
-
-function populateShopItems() {
-    shopItemsContainer.innerHTML = "";
-    items.forEach((item, index) => {
-        const button = document.createElement("button");
-        button.className = "shop-item";
-        button.textContent = `${item.name} - ${item.cost} Clicks`;
-        button.disabled = clickCounter < item.cost;
-        button.onclick = () => unlockItem(item, index);
-        shopItemsContainer.appendChild(button);
-    });
-}
-
-function unlockItem(item, index) {
-    if (clickCounter >= item.cost) {
-        clickCounter -= item.cost;
-        item.effect();
-        items.splice(index, 1);
-        updateUI();
-        alert(`${item.name} unlocked!`);
+// Toggle Music Controls
+toggleMusicButton.addEventListener("click", () => {
+    if (lofiMusic.paused) {
+        lofiMusic.play();
+        toggleMusicButton.textContent = "Pause Lofi Music";
+    } else {
+        lofiMusic.pause();
+        toggleMusicButton.textContent = "Play Lofi Music";
     }
-}
+});
 
-function updateUI() {
-    clickCounterElement.textContent = clickCounter;
-    buyTabTitleButton.disabled = clickCounter < tabTitleCost || tabTitleBought;
-    buyAutoClickerButton.disabled = clickCounter < autoClickerCost || autoClickerBought;
-    updateProgressBar();
-    populateShopItems();
-}
-
-function updateProgressBar() {
-    const progress = Math.min((clickCounter / maxClicks) * 100, 100);
-    progressBar.style.width = `${progress}%`;
-    progressPercentage.textContent = `${Math.round(progress)}%`;
-}
+// Event Listeners for Shop and Settings
+shopButton.addEventListener("click", () => {
+    shopModal.style.display = "block";
+});
+settingsButton.addEventListener("click", () => {
+    settingsModal.style.display = "block";
+});
+closeModal.addEventListener("click", () => {
+    shopModal.style.display = "none";
+});
+closeSettings.addEventListener("click", () => {
+    settingsModal.style.display = "none";
+});
