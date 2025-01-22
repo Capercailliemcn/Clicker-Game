@@ -1,79 +1,119 @@
+// Game Variables
 let clickCounter = 0;
 let tabTitleCost = 10;
 let tabTitleBought = false;
 let autoClickerCost = 50;
 let autoClickerBought = false;
+let maxClicks = 1000;
 
+// DOM Elements
 const clickButton = document.getElementById("clickButton");
 const clickCounterElement = document.getElementById("clickCounter");
 const buyTabTitleButton = document.getElementById("buyTabTitle");
-const tabTitleCostElement = document.getElementById("tabTitleCost");
 const buyAutoClickerButton = document.getElementById("buyAutoClicker");
 const progressBar = document.getElementById("progressBar");
 const progressPercentage = document.getElementById("progressPercentage");
+const shopButton = document.getElementById("shopButton");
+const shopModal = document.getElementById("shopModal");
+const closeModal = document.getElementById("closeModal");
+const shopItemsContainer = document.getElementById("shopItems");
 
-clickButton.addEventListener("click", () => {
+// Create 50 Shop Items
+const totalItems = 50;
+const items = Array.from({ length: totalItems }, (_, index) => ({
+    id: index + 1,
+    cost: (index + 1) * 10, // Cost increases with each item
+    unlocked: false,
+    name: `Item ${index + 1}`
+}));
+
+// Event Listeners
+clickButton.addEventListener("click", handleClick);
+buyTabTitleButton.addEventListener("click", handleTabTitleUpgrade);
+buyAutoClickerButton.addEventListener("click", handleAutoClickerUpgrade);
+shopButton.addEventListener("click", openShopModal);
+closeModal.addEventListener("click", closeShopModal);
+
+// Functions
+function handleClick() {
     clickCounter++;
-    clickCounterElement.textContent = clickCounter;
-    
-    // Enable buying the Tab Title upgrade if enough clicks are earned
-    if (clickCounter >= tabTitleCost && !tabTitleBought) {
-        buyTabTitleButton.disabled = false;
-    }
+    updateUI();
+}
 
-    // Enable buying the Auto Clicker upgrade if enough clicks are earned
-    if (clickCounter >= autoClickerCost && !autoClickerBought) {
-        buyAutoClickerButton.disabled = false;
-    }
-
-    // Update Progress Bar based on clicks
-    updateProgressBar();
-});
-
-buyTabTitleButton.addEventListener("click", () => {
+function handleTabTitleUpgrade() {
     if (clickCounter >= tabTitleCost) {
         clickCounter -= tabTitleCost;
         tabTitleBought = true;
-        clickCounterElement.textContent = clickCounter;
-        buyTabTitleButton.disabled = true;
+        updateUI();
         changeTabTitle();
     }
-});
-
-buyAutoClickerButton.addEventListener("click", () => {
-    if (clickCounter >= autoClickerCost) {
-        clickCounter -= autoClickerCost;
-        clickCounterElement.textContent = clickCounter;
-        autoClickerBought = true;
-        buyAutoClickerButton.disabled = true;
-        activateAutoClicker();
-    }
-});
-
-function changeTabTitle() {
-    document.title = "Congratulations! You've bought the tab title!";
 }
 
+function handleAutoClickerUpgrade() {
+    if (clickCounter >= autoClickerCost) {
+        clickCounter -= autoClickerCost;
+        autoClickerBought = true;
+        updateUI();
+        activateAutoClicker();
+    }
+}
+
+function openShopModal() {
+    shopModal.style.display = "block";
+    populateShopItems();
+}
+
+function closeShopModal() {
+    shopModal.style.display = "none";
+}
+
+// Update UI Elements
+function updateUI() {
+    clickCounterElement.textContent = clickCounter;
+    updateProgressBar();
+    populateShopItems();
+}
+
+// Update Progress Bar
+function updateProgressBar() {
+    const progress = (clickCounter / maxClicks) * 100;
+    progressBar.style.width = `${progress}%`;
+    progressPercentage.textContent = `${Math.round(progress)}%`;
+}
+
+// Tab Title Upgrade Effect
+function changeTabTitle() {
+    document.title = "You've unlocked the Tab Title!";
+}
+
+// Auto Clicker Effect
 function activateAutoClicker() {
     setInterval(() => {
         clickCounter++;
-        clickCounterElement.textContent = clickCounter;
-        updateProgressBar();
-    }, 1000); // Adds 1 click every second
+        updateUI();
+    }, 1000);
 }
 
-function updateProgressBar() {
-    const maxClicks = 1000; // Max number of clicks to complete the game
-    const percentage = Math.min((clickCounter / maxClicks) * 100, 100); // Calculates the percentage progress
-    progressBar.style.width = `${percentage}%`;
-    progressPercentage.textContent = `${Math.round(percentage)}%`;
+// Populate Shop Items
+function populateShopItems() {
+    shopItemsContainer.innerHTML = "";
+    items.forEach(item => {
+        const itemButton = document.createElement("button");
+        itemButton.textContent = `${item.name} - ${item.cost} Clicks`;
+        itemButton.className = "shop-item";
+        itemButton.disabled = item.unlocked || clickCounter < item.cost;
+        itemButton.onclick = () => unlockItem(item);
+        shopItemsContainer.appendChild(itemButton);
+    });
+}
 
-    // Optionally, change the color of the progress bar based on completion percentage
-    if (percentage > 80) {
-        progressBar.style.backgroundColor = "#4caf50";
-    } else if (percentage > 50) {
-        progressBar.style.backgroundColor = "#ffeb3b";
-    } else {
-        progressBar.style.backgroundColor = "#76c7c0";
+// Unlock Item
+function unlockItem(item) {
+    if (clickCounter >= item.cost) {
+        clickCounter -= item.cost;
+        item.unlocked = true;
+        updateUI();
+        alert(`You unlocked ${item.name}!`);
     }
 }
+
