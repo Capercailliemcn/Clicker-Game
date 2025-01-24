@@ -16,7 +16,6 @@
         <section class="game-info">
             <div class="click-area">
                 <button id="clickButton" class="click-button">Click Me!</button>
-                <div id="clickEffectsContainer" class="click-effects-container"></div>
                 <p class="clicks-info">Clicks: <span id="clickCounter">0</span></p>
             </div>
 
@@ -38,7 +37,9 @@
             <div class="modal-content">
                 <span id="closeModal" class="close">&times;</span>
                 <h3>Item Shop</h3>
-                <div class="shop-items" id="shopItems"></div>
+                <div class="shop-items" id="shopItems">
+                    <!-- Shop items will be dynamically generated -->
+                </div>
             </div>
         </div>
 
@@ -65,15 +66,6 @@
             <source src="lofi-music.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
-
-        <!-- Level Info -->
-        <section class="level-info">
-            <h2>Level: <span id="levelCounter">1</span></h2>
-            <p id="levelRewardMessage">Reach level 2 for your first reward!</p>
-        </section>
-
-        <!-- Confetti Effect -->
-        <div id="confettiContainer" class="confetti-container"></div>
     </div>
 
     <script src="game.js"></script>
